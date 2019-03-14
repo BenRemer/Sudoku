@@ -10,8 +10,7 @@ import solve
 # bot_prefix = ('!') # Prefix to use
 # bot = commands.Bot(command_prefix=bot_prefix) # Set bot
 
-message_limit = 2000 # Limit for discord's messages
-output_size = 30 # Will be a square, so used for both X and Y
+# message_limit = 2000 # Limit for discord's messages
 size = 9 # Size of every block and number of blocks
 max_tries = 100 # Maximun number of board tries
 # current_matrix = None

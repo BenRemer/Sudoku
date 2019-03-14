@@ -10,112 +10,123 @@ TOKEN = config.TOKEN # Get token form config file
 bot_prefix = ('!') # Prefix to use
 bot = commands.Bot(command_prefix=bot_prefix) # Set bot
 message_limit = 2000 # Limit for discord's messages
+size = 9 # Size of every block and number of blocks
 
-@bot.event
-async def on_ready():
-    print("Connected")
-    print("---------")
-    
-
-@bot.command(name='play')
-async def start_game(context, difficulty = None):
-    max_remove = 0
-    if not difficulty:
-        await context.send('Incorrect arguments: Type !play \'difficulty\'\nExample: !play easy')
-        return
-    if difficulty == 'easy' or difficulty == 'Easy':
-        await context.send('Easy Game:')
-        max_remove = 35
-    elif difficulty == 'medium' or difficulty == 'Medium':
-        await context.send('Medium Game:')
-        max_remove = 48
-    elif difficulty == 'hard' or difficulty == 'Hard':
-        await context.send('Hard Game:')
-        max_remove = 56
-    else:
-        await context.send('Incorrect arguments: Type !play \'difficulty\'\nExample: !play easy')
-        return
-        
-    good = False
-    while(not good):
-        matrix = np.zeros((size, size)) # matrix[row][col]
-        good, matrix = sudoku.create_board(matrix)
-    matrix = sudoku.blank_board(matrix, max_remove)
-
+async def print_matrix(context, matrix):
     message = sudoku.print_board_bot(matrix)
     firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
     split_message = message.split('STRING_SPLIT')
     for split in split_message:
         await context.send(split)
-    np.save('boards/'+str(context.author.id)+'.npy', matrix)
+
+@bot.event # On start
+async def on_ready():
+    print("Connected")
+    print("---------")
+    
+
+@bot.command(name='play') # For command !play
+async def start_game(context, difficulty = None):
+    max_remove = 0
+    if not difficulty: # If there was no difficulty given
+        await context.send('Incorrect arguments: Type !play \'difficulty\'\nExample: !play easy')
+        return
+    if difficulty == 'easy' or difficulty == 'Easy': # If easy
+        await context.send('Easy Game:')
+        max_remove = 35
+    elif difficulty == 'medium' or difficulty == 'Medium': # If medium
+        await context.send('Medium Game:')
+        max_remove = 48
+    elif difficulty == 'hard' or difficulty == 'Hard': # If hard
+        await context.send('Hard Game:')
+        max_remove = 56
+    else:
+        await context.send('Incorrect arguments: Type !play \'difficulty\'\nExample: !play easy') # If something else there was an error
+        return
+        
+    good = False
+    while(not good): # While there is not a good board
+        matrix = np.zeros((size, size)) # matrix[row][col]
+        good, matrix = sudoku.create_board(matrix)
+    matrix = sudoku.blank_board(matrix, max_remove) # Set board
+
+    message = sudoku.print_board_bot(matrix) # Make message to send
+    firstpart, secondpart = message[:len(message)//2], message[len(message)//2:] # Split because of discord limit
+    split_message = message.split('STRING_SPLIT')
+    for split in split_message:
+        await context.send(split)
+    np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save board to file
     given = {}
     for row in range(9):
         for col in range(9):
             if matrix[row][col] != 0.0:
                 given[(row,col)] = matrix[row][col]
-    # save_given(given, str(context.author.id)+'given.npy')
-    np.save('boards/'+str(context.author.id)+'given.npy', given)
+    np.save('boards/'+str(context.author.id)+'given.npy', given) # Save starteds to file
 
-@bot.command(name='put')
+@bot.command(name='put') # For command !put
 async def put(context, *, location = None):
-    try:
+    try: # Try to load matrix and starting matrix
         matrix = np.load('boards/'+str(context.author.id)+'.npy')
         given = np.load('boards/'+str(context.author.id)+'given.npy').item()
-    except:
+    except: # If they don't exist error and return
         await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
         return
-    if not location:
+    if not location: # If they did not put a location error and return
         await context.send('Must put a location! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
         return
 
-    location = location.replace('(', '').replace(')','').replace(',','').replace(' ', '').upper()
-    if len(location) != 3:
+    location = location.replace('(', '').replace(')','').replace(',','').replace(' ', '').upper() # Remove all characters but row,col,number
+    if len(location) != 3: # If not all three error
         await context.send('Location wrong! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
         return
     row = None
     col = None
     number = int(location[2])
+    # Figure out which was the row and which was the column and if number is good
     if sudoku.letter_is_row(location[1]) and sudoku.letter_is_col(location[0]) and solve.check_one_number(number):
         row = sudoku.row_to_number.get(location[1])
         col = sudoku.col_to_number.get(location[0])
     elif sudoku.letter_is_row(location[0]) and sudoku.letter_is_col(location[1]) and solve.check_one_number(number):
         row = sudoku.row_to_number.get(location[0])
         col = sudoku.col_to_number.get(location[1])
-    else:
+    else: # Else error out
         await context.send('Error! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
         return
 
-    if (row,col) in given:
+    if (row,col) in given: # If location given originally don't let them get rid of it
         await context.send('That location was given to begin with, don\'t change it')
-    else:
+    else: # Change matrix and save it
         matrix[row][col] = number
         np.save('boards/'+str(context.author.id)+'.npy', matrix)
 
-    message = sudoku.print_board_bot(matrix)
-    firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    split_message = message.split('STRING_SPLIT')
-    for split in split_message:
-        await context.send(split)
+    # message = sudoku.print_board_bot(matrix)
+    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
+    # split_message = message.split('STRING_SPLIT')
+    # for split in split_message:
+    #     await context.send(split)
+    await print_matrix(context, matrix) # Print out matrix
         
-@bot.command(name='reset')
+@bot.command(name='reset') # Command reset to reset board back to given
 async def reset(context, arg=None):
-    await context.send('Board reset to beginning')
-    try:
+    await context.send('Board reset to beginning') # Send message
+    try: # Try to load matrix and given
         matrix = np.load('boards/'+str(context.author.id)+'.npy')
         given = np.load('boards/'+str(context.author.id)+'given.npy').item()
-    except:
+    except: # If error quit
         await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
         return
+    # Go through matrix and reset all to given
     for row in range(9):
         for col in range(9):
             if (row,col) not in given:
                 matrix[row][col] = 0
-    np.save('boards/'+str(context.author.id)+'.npy', matrix)
-    message = sudoku.print_board_bot(matrix)
-    firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    split_message = message.split('STRING_SPLIT')
-    for split in split_message:
-        await context.send(split)
+    np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save localy
+    # message = sudoku.print_board_bot(matrix)
+    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
+    # split_message = message.split('STRING_SPLIT')
+    # for split in split_message:
+    #     await context.send(split)
+    await print_matrix(context, matrix) # Print out matrix
 
 @bot.command(name='show')
 async def show(context, arg=None):
@@ -124,11 +135,12 @@ async def show(context, arg=None):
     except:
         await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
         return
-    message = sudoku.print_board_bot(matrix)
-    firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    split_message = message.split('STRING_SPLIT')
-    for split in split_message:
-        await context.send(split)
+    # message = sudoku.print_board_bot(matrix)
+    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
+    # split_message = message.split('STRING_SPLIT')
+    # for split in split_message:
+    #     await context.send(split)
+    await print_matrix(context, matrix) # Print out matrix
 
 @bot.command(name='commands')
 async def display_commands(context, arg=None):

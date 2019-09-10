@@ -4,6 +4,7 @@
 import numpy as np
 import random
 import solve
+import custom_emojis
 
 
 # TOKEN = config.TOKEN # Get token form config file
@@ -55,6 +56,20 @@ number_switcher = {
     9 : ':nine:'
 }
 
+custom_number_switcher = custom_emojis.custom_number_switcher
+# custom_number_switcher = {
+#     0 : ':heavy_multiplication_x:',
+#     1 : '<:red1:621076277742403605>',
+#     2 : '<:red2:621073598752489475>',
+#     3 : '<:red3:621073599045828669>',
+#     4 : '<:red4:621073598974656539>',
+#     5 : '<:red5:621073598811078657>',
+#     6 : '<:red6:621073598639243280>',
+#     7 : '<:red7:621073598987108383>',
+#     8 : '<:red8:621073598974656540>',
+#     9 : '<:red9:621073598958010378>'
+# }
+
 cmd_col_switcher = { # Switch statement to add letter boarder for columns
     0 : 'A',
     1 : 'B',
@@ -98,12 +113,12 @@ def print_board_console(matrix): # Prints board and boarder
         print('|')
     print('  |--------------|--------------|-------------|')
 
-def print_board_bot(matrix): # Prints board and boarder
+def print_board_bot(matrix, given): # Prints board and boarder
     message = ''
-    message += ':heavy_multiplication_x:'
+    message += ':heavy_multiplication_x:   '
     for i in range(size):
         if i % 3 == 0 and i != 0:
-            message += ' '
+            message += '    '
         message += '   '
         message +=  col_switcher.get(i)
         # message += ' '
@@ -118,10 +133,14 @@ def print_board_bot(matrix): # Prints board and boarder
         message += (row_switcher.get(row))
         for col in range(size):
             if col % 3 == 0:
-                message += ' | '
-                message += number_switcher.get(int(matrix[row][col]))
+                message += '  |   '
+                # message += number_switcher.get(int(matrix[row][col]))
             else:
                 message += '  '
+                # message += number_switcher.get(int(matrix[row][col]))
+            if (row,col) in given:  # if original number, print in red
+                message += custom_number_switcher.get(int(matrix[row][col]))
+            else:   # else put as blue
                 message += number_switcher.get(int(matrix[row][col]))
             message += ' '
         message += '|\n'
@@ -141,7 +160,7 @@ def create_spot(number, row, matrix): # Creates random column and checks if the 
     time = 0
     fair_number = False
     while(not fair_number):
-        if time > max_tries: # After max tries amout of time it gives up on the board
+        if time > max_tries: # After max tries amount of time it gives up on the board
             return 'BAD_BOARD'
         time += 1
         fair_number = True

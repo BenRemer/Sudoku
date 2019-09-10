@@ -36,13 +36,13 @@ async def start_game(context, difficulty = None):
     if not difficulty: # If there was no difficulty given
         await context.send('Incorrect arguments: Type !play \'difficulty\'\nExample: !play easy')
         return
-    if difficulty == 'easy' or difficulty == 'Easy': # If easy
+    if difficulty.lower() == 'easy' or difficulty == 'Easy': # If easy
         await context.send('Easy Game:')
         max_remove = 35
-    elif difficulty == 'medium' or difficulty == 'Medium': # If medium
+    elif difficulty.lower() == 'medium' or difficulty == 'Medium': # If medium
         await context.send('Medium Game:')
         max_remove = 48
-    elif difficulty == 'hard' or difficulty == 'Hard': # If hard
+    elif difficulty.lower() == 'hard' or difficulty == 'Hard': # If hard
         await context.send('Hard Game:')
         max_remove = 56
     else:
@@ -62,7 +62,7 @@ async def start_game(context, difficulty = None):
         for col in range(9):
             if matrix[row][col] != 0.0:
                 given[(row,col)] = matrix[row][col]
-    np.save('boards/'+str(context.author.id)+'given.npy', given) # Save starteds to file
+    np.save('boards/'+str(context.author.id)+'given.npy', given) # Save given spots to file
 
     await print_matrix(context, matrix, given)
 
@@ -75,12 +75,12 @@ async def put(context, *, location = None):
         await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
         return
     if not location: # If they did not put a location error and return
-        await context.send('Must put a location! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
+        await context.send('Must put a location! Type !put (X,Y,#)\nExample: !put (A,J,1)')
         return
 
     location = location.replace('(', '').replace(')','').replace(',','').replace(' ', '').upper() # Remove all characters but row,col,number
     if len(location) != 3: # If not all three error
-        await context.send('Location wrong! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
+        await context.send('Location wrong! Type !put (X,Y,#)\nExample: !put (A,J,1)')
         return
     row = None
     col = None
@@ -93,7 +93,7 @@ async def put(context, *, location = None):
         row = sudoku.row_to_number.get(location[0])
         col = sudoku.col_to_number.get(location[1])
     else: # Else error out
-        await context.send('Error! Tpye !put (X,Y,#)\nExample: !put (A,J,1)')
+        await context.send('Error! Type !put (X,Y,#)\nExample: !put (A,J,1)')
         return
 
     if (row,col) in given: # If location given originally don't let them get rid of it
@@ -109,6 +109,40 @@ async def put(context, *, location = None):
     #     await context.send(split)
     await print_matrix(context, matrix, given) # Print out matrix
         
+@bot.command(name='remove') # remove a certain spot
+async def remove(context, *, location = None):
+    try: # Try to load matrix and starting matrix
+        matrix = np.load('boards/'+str(context.author.id)+'.npy')
+        given = np.load('boards/'+str(context.author.id)+'given.npy').item()
+    except: # If they don't exist error and return
+        await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
+        return
+    if not location: # If they did not put a location error and return
+        await context.send('Must put a location! Type !remove (X,Y)\nExample: !remove (A,J)')
+        return
+    location = location.replace('(', '').replace(')','').replace(',','').replace(' ', '').upper() # Remove all characters but row,col,number
+    if len(location) != 2: # If there aren't two points
+        await context.send('Location wrong! Type !remove (X,Y)\nExample: !remove (A,J)')
+        return
+    row = None
+    col = None
+    if sudoku.letter_is_row(location[1]) and sudoku.letter_is_col(location[0]):
+        row = sudoku.row_to_number.get(location[1])
+        col = sudoku.col_to_number.get(location[0])
+    elif sudoku.letter_is_row(location[0]) and sudoku.letter_is_col(location[1]):
+        row = sudoku.row_to_number.get(location[0])
+        col = sudoku.col_to_number.get(location[1])
+    else: # Else error out
+        await context.send('Error! Type !remove (X,Y)\nExample: !remove (A,J)')
+        return
+
+    if (row,col) in given: # If location given originally don't let them get rid of it
+        await context.send('That location was given to begin with, don\'t change it')
+    else: # Change matrix and save it
+        matrix[row][col] = 0
+        np.save('boards/'+str(context.author.id)+'.npy', matrix)
+    await print_matrix(context, matrix, given) # Print out matrix
+
 @bot.command(name='reset') # Command reset to reset board back to given
 async def reset(context, arg=None):
     await context.send('Board reset to beginning') # Send message
@@ -123,7 +157,7 @@ async def reset(context, arg=None):
         for col in range(9):
             if (row,col) not in given:
                 matrix[row][col] = 0
-    np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save localy
+    np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save locally
     # message = sudoku.print_board_bot(matrix)
     # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
     # split_message = message.split('STRING_SPLIT')
@@ -152,6 +186,7 @@ async def display_commands(context, arg=None):
     message += 'Commands to use the Sudoku Bot:\n'
     message += '\'!play (difficulty)\' to play a game\n'
     message += '\'!put (X,Y,#)\' to put a number on an already created board\n'
+    message += '\'!remove (X,Y)\' to remove a number on an already created board\n'
     message += '\'!show\' to show your existing board\n'
     message += '\'!reset\' to reset board back to the original state\n'
     await context.send(message)

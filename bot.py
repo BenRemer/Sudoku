@@ -12,7 +12,7 @@ bot = commands.Bot(command_prefix=bot_prefix) # Set bot
 message_limit = 2000 # Limit for discord's messages
 size = 9 # Size of every block and number of blocks
 
-async def print_matrix(context, matrix, given):
+async def print_matrix(context, matrix, given): # print board to discord
     message = sudoku.print_board_bot(matrix, given)
     firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
     split_message = message.split('STRING_SPLIT')
@@ -23,11 +23,8 @@ async def print_matrix(context, matrix, given):
 async def on_ready():
     print("Connected")
     print("---------")
-    # client.emojis.find(emoji => emoji.name === "red1");
-    # custom_emojies = await discord.Guild.fetch_emojis()
-    # print(custom_emojies)
-    # print(str(bot.emojis()));
-    # print(emojiList)
+    
+    
     
 
 @bot.command(name='play') # For command !play
@@ -55,7 +52,6 @@ async def start_game(context, difficulty = None):
         good, matrix = sudoku.create_board(matrix)
     matrix = sudoku.blank_board(matrix, max_remove) # Set board
 
-    
     np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save board to file
     given = {}
     for row in range(9):
@@ -102,12 +98,7 @@ async def put(context, *, location = None):
         matrix[row][col] = number
         np.save('boards/'+str(context.author.id)+'.npy', matrix)
 
-    # message = sudoku.print_board_bot(matrix)
-    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    # split_message = message.split('STRING_SPLIT')
-    # for split in split_message:
-    #     await context.send(split)
-    await print_matrix(context, matrix, given) # Print out matrix
+    await print_matrix(context, matrix, given) # Print out board
         
 @bot.command(name='remove') # remove a certain spot
 async def remove(context, *, location = None):
@@ -158,11 +149,6 @@ async def reset(context, arg=None):
             if (row,col) not in given:
                 matrix[row][col] = 0
     np.save('boards/'+str(context.author.id)+'.npy', matrix) # Save locally
-    # message = sudoku.print_board_bot(matrix)
-    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    # split_message = message.split('STRING_SPLIT')
-    # for split in split_message:
-    #     await context.send(split)
     await print_matrix(context, matrix, given) # Print out matrix
 
 @bot.command(name='show')
@@ -173,11 +159,6 @@ async def show(context, arg=None):
     except:
         await context.send('Must start a game first: Type !play \'difficulty\'\nExample: !play easy')
         return
-    # message = sudoku.print_board_bot(matrix)
-    # firstpart, secondpart = message[:len(message)//2], message[len(message)//2:]
-    # split_message = message.split('STRING_SPLIT')
-    # for split in split_message:
-    #     await context.send(split)
     await print_matrix(context, matrix, given) # Print out matrix
 
 @bot.command(name='commands')
@@ -190,7 +171,5 @@ async def display_commands(context, arg=None):
     message += '\'!show\' to show your existing board\n'
     message += '\'!reset\' to reset board back to the original state\n'
     await context.send(message)
-
-
 
 bot.run(TOKEN)

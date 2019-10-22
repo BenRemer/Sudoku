@@ -1,7 +1,7 @@
-##Discord Sudoku bot
+#Discord Sudoku bot
 This is a discord bot that allows users to play sudoku on your server or in the bots private chat.
 
-#Install Guide
+##Install Guide
 ###Prereqs 
  - Install the discord.py API by following the instructions here: ```https://github.com/Rapptz/discord.py```.
  - Install numpy using the following instructions: ```https://scipy.org/install.html```.

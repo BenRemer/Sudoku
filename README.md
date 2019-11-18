@@ -26,7 +26,11 @@ This is a discord bot that allows users to play sudoku on your server or in the 
 
 ### Commands
 ```!play (difficulty)``` to play a game
+
 ```!put (X,Y,#)``` to put a number on an already created board
+
 ```!remove (X,Y)``` to remove a number on an already created board
+
 ```!show``` to show your existing board
+
 ```!reset``` to reset board back to the original state

@@ -17,8 +17,16 @@ This is a discord bot that allows users to play sudoku on your server or in the 
 		- This is done by typing ```\:emojiName:``` to get the ID.
 		- For each number save that in the [`custom_emojis.py`](custom_emojis.py) file for the corresponding number.
 
+## Usage
 ### Running the bot
 - Open up a terminal and move into the main folder.
 - To start the bot run: ```./bot.py``` if on Unix.
 	- If on windows run ```python3 bot.py```.
 - Type ```!commands``` into chat to see the bots commands.
+
+### Commands
+```!play (difficulty)``` to play a game
+```!put (X,Y,#)``` to put a number on an already created board
+```!remove (X,Y)``` to remove a number on an already created board
+```!show``` to show your existing board
+```!reset``` to reset board back to the original state

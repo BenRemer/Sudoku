@@ -2,3 +2,4 @@
 config.py
 bad.py
 *.npy
+__pycache__/
